@@ -4,7 +4,7 @@
 <!-- What problem/opportunity are we addressing? Why now? -->
 
 ## Solution
-<!-- High-level approach, key decisions, trade-offs -->
+<!-- High-level approach, key decisions,trade-offs -->
 
 ## Scope / Impact
 - Affected modules/packages:
