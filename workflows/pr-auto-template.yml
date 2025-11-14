@@ -3,6 +3,10 @@ on:
   pull_request:
     types: [opened, reopened]
 
+permissions:
+  pull-requests: write
+  contents: read
+
 jobs:
   apply-template:
     runs-on: ubuntu-latest
@@ -15,6 +19,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            const { context } = require('@actions/github');
             const branchName = context.payload.pull_request.head.ref;
             const repo = context.repo.repo;
             const owner = context.repo.owner;
@@ -38,11 +43,15 @@ jobs:
               return;
             }
 
-            await github.rest.pulls.update({
-              owner,
-              repo,
-              pull_number: prNumber,
-              body
-            });
-
-            console.log(`✅ Applied template: ${templatePath}`);
+            // Update PR body only if it's empty
+            if (!context.payload.pull_request.body) {
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: prNumber,
+                body
+              });
+              console.log(`Applied template: ${templatePath}`);
+            } else {
+              console.log('PR already contains a body, skipping update.');
+            }
