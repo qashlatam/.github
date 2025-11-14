@@ -1,0 +1,48 @@
+name: 🧩 Auto Apply PR Template
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  apply-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Apply Pull Request Template Automatically
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const branchName = context.payload.pull_request.head.ref;
+            const repo = context.repo.repo;
+            const owner = context.repo.owner;
+            const prNumber = context.payload.pull_request.number;
+
+            console.log(`Detected branch: ${branchName}`);
+
+            let templatePath = '.github/pull_request_template/feature.md';
+
+            if (branchName.startsWith('fix/') || branchName.startsWith('bugfix/')) {
+              templatePath = '.github/pull_request_template/bugfix.md';
+            } else if (branchName.startsWith('chore/')) {
+              templatePath = '.github/pull_request_template/chore.md';
+            }
+
+            let body = '';
+            try {
+              body = fs.readFileSync(templatePath, 'utf8');
+            } catch (err) {
+              console.log(`Template not found at ${templatePath}, skipping.`);
+              return;
+            }
+
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: prNumber,
+              body
+            });
+
+            console.log(`✅ Applied template: ${templatePath}`);
